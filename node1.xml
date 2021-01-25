@@ -1,0 +1,1 @@
+<nodes><node id="LU" x="-10" y="10" /><node id="RU" x="10" y="10" /><node id="LD" x="-10" y="-10" /><node id="RD" x="10" y="-10" /><node id="CL" x="-10" y="0" /><node id="CR" x="10" y="0" /><node id="CU" x="0" y="10" /><node id="CD" x="0" y="-10" /><node id="IT" x="0" y="0" /></nodes>

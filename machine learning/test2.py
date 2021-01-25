@@ -1,4 +1,4 @@
-from xml.etree.ElementTree import Element, ElementTree, dump
+from xml.etree.ElementTree import Element, dump
 
 root = Element("nodes")
 
@@ -11,30 +11,19 @@ root.append(node3)
 node4 = Element("node", {"id" : "top-left", "x" : "0", "y" : "1250"})
 root.append(node4)
 
-ElementTree(root).write("node.xml")
-#################################################
-
 types = Element("types")
 type = Element("type", {"id" : "edgeType", "numLanes" : "2", "speed" : "36.1"})
 types.append(type)
 
-ElementTree(types).write("types.xml")
-#####################################################
 edges = Element("edges")
-edge1 = Element("edge", {"from" : "bottom-left", "id" : "bottom", "to" : "bottom-right", "type" : "edgeType"})
+edge1 = Element("edge", {"from" : "bottom-left", "id" : "bottom", "to" : "bottom-right", "type" : "edgetype"})
 edges.append(edge1)
-edge2 = Element("edge", {"from" : "bottom-right", "id" : "right", "to" : "top-right", "type" : "edgeType"})
+edge2 = Element("edge", {"from" : "bottom-right", "id" : "right", "to" : "top-right", "type" : "edgetype"})
 edges.append(edge2)
-edge3 = Element("edge", {"from" : "top-right", "id" : "top", "to" : "top-left", "type": "edgeType"})
+edge3 = Element("edge", {"from" : "top-right", "id" : "top", "to" : "top-left", "type": "edgetype"})
 edges.append(edge3)
-edge4 = Element("edge", {"from" : "top-left", "id" : "left", "to" : "bottom-left", "type": "edgeType"})
+edge4 = Element("edge", {"from" : "top-left", "id" : "left", "to" : "bottom-left", "type": "edgetype"})
 edges.append(edge4)
-
-ElementTree(edges).write("edges.xml")
-###################################################
-# <?xml version="1.0" encoding="UTF-8"?>
-# XMLV = Element("?xml", {"version" : "1.0", "encoding" : "UTF-8"})
-
 
 Configuration = Element("configuration")
 input  =Element("input")
@@ -58,8 +47,21 @@ no_turnarounds = Element("no-turnarounds", value = "true")
 processing.append(no_turnarounds)
 
 Configuration.append(processing)
-ElementTree(Configuration).write("circular.net.xml")
 
+def indent(elem, level=0): #자료 출처 https://goo.gl/J8VoDK
+    i = "\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for elem in elem:
+            indent(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
 
-
-
+indent(Configuration)
+dump(Configuration)

@@ -1,1 +1,1 @@
-<edges><edge from="bottom-left" id="bottom" to="bottom-right" type="edgetype" /><edge from="bottom-right" id="right" to="top-right" type="edgetype" /><edge from="top-right" id="top" to="top-left" type="edgetype" /><edge from="top-left" id="left" to="bottom-left" type="edgetype" /></edges>
+<edges><edge from="bottom-left" id="bottom" to="bottom-right" type="edgeType" /><edge from="bottom-right" id="right" to="top-right" type="edgeType" /><edge from="top-right" id="top" to="top-left" type="edgeType" /><edge from="top-left" id="left" to="bottom-left" type="edgeType" /></edges>
