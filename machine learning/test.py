@@ -2,36 +2,39 @@ from xml.etree.ElementTree import Element, ElementTree, dump
 
 root = Element("nodes")
 
-node1 = Element("node", id = "bottom-left", x = "0", y = "0")
+node1 = Element("node", {"id" : "bottom-left", "x" : "0", "y" : "0"})
 root.append(node1)
-node2 = Element("node", id = "bottom-right", x = "1250", y = "0")
+node2 = Element("node", {"id" : "bottom-right", "x" : "1250", "y" : "0"})
 root.append(node2)
-node3 = Element("node", id = "top-right", x = "1250", y = "1250")
+node3 = Element("node", {"id" : "top-right", "x" : "1250", "y" : "1250"})
 root.append(node3)
-node4 = Element("node", id = "top-left", x = "0", y = "1250")
+node4 = Element("node", {"id" : "top-left", "x" : "0", "y" : "1250"})
 root.append(node4)
 
 ElementTree(root).write("node.xml")
 #################################################
 
 types = Element("types")
-type = Element("type", id = "edgeType", numLanes = "2", spped = "36.1")
-types.appent(type)
+type = Element("type", {"id" : "edgeType", "numLanes" : "2", "speed" : "36.1"})
+types.append(type)
 
 ElementTree(types).write("types.xml")
 #####################################################
 edges = Element("edges")
-edge1 = Element("edge", from = "bottom-left", id = "bottom", to = "bottom-right", type= "edgetype")
+edge1 = Element("edge", {"from" : "bottom-left", "id" : "bottom", "to" : "bottom-right", "type" : "edgetype"})
 edges.append(edge1)
-edge2 = Element("edge", from = "bottom-right", id = "right", to = "top-right", type= "edgetype")
+edge2 = Element("edge", {"from" : "bottom-right", "id" : "right", "to" : "top-right", "type" : "edgetype"})
 edges.append(edge2)
-edge3 = Element("edge", from = "top-right", id = "top", to = "top-left", type= "edgetype")
+edge3 = Element("edge", {"from" : "top-right", "id" : "top", "to" : "top-left", "type": "edgetype"})
 edges.append(edge3)
-edge4 = Element("edge", from = "top-left", id = "left", to = "bottom-left", type= "edgetype")
+edge4 = Element("edge", {"from" : "top-left", "id" : "left", "to" : "bottom-left", "type": "edgetype"})
 edges.append(edge4)
 
-Element(edges).write("edges.xml")
+ElementTree(edges).write("edges.xml")
 ###################################################
+# <?xml version="1.0" encoding="UTF-8"?>
+# XMLV = Element("?xml", {"version" : "1.0", "encoding" : "UTF-8"})
+
 
 Configuration = Element("configuration")
 input  =Element("input")
@@ -55,5 +58,8 @@ no_turnarounds = Element("no-turnarounds", value = "true")
 processing.append(no_internal_links)
 
 Configuration.append(processing)
+ElementTree(Configuration).write("circular.net.xml")
+
+
 
 

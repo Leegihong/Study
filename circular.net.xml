@@ -1,0 +1,1 @@
+<configuration><input><node-files value="node.xml" /><edge-files value="edges.xml" /><type-files value="types.xml" /></input><output><ouput-file value="circular.net.xml" /></output><processing><no-internal-links value="ture" /><no-internal-links value="ture" /></processing></configuration>
