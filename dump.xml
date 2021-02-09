@@ -1,0 +1,1 @@
+<configuration><input><net-file value="circular.net.xml" /><route-files value="circular.rou.xml" /><additional-files values="circular.add.xml" /></input><output><netstate-dump value="dump.xml" /></output><time><begin value="0" /><end value="10000" /></time></configuration>

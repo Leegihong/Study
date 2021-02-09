@@ -17,7 +17,7 @@ def specify_nodes(length):
                  {"id": "IT",   "x": 0, "y": 0}]  # 9
         return nodes
 
-Nodes = specify_nodes(10)
+Nodes = specify_nodes(100)
 root = Element("nodes")
 
 for i in Nodes:
@@ -257,9 +257,9 @@ def specify_edges(length, lanes, speed_limit):
         ]
         return edges
 
-
+import numpy as np
 root = Element("edges")
-edges = specify_edges(10,2,30)
+edges = specify_edges(50,2,20)
 for i in edges:
     edge1 = Element("edge")
     for j in i.items():
@@ -289,7 +289,7 @@ def specify_type(numlanes, speed):
     return type
 
 root  = Element("types")
-types = specify_type(2, 36.1)
+types = specify_type(2, 20)
 for i in types:
     type1 = Element("type")
     for j in i.items():
