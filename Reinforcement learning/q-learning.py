@@ -8,8 +8,7 @@ import numpy as np
 import random
 
 env = gym.make("CartPole-v1")
-learning_rate = 0.002
-sample_batch_size = 32
+learning_rate = 0.05
 gamma = 0.98
 
 
@@ -18,7 +17,7 @@ class Qnet(nn.Module):
     def __init__(self):
         super(Qnet,self).__init__()
         self.memory = []
-        # self.model = self.forward()
+        # self.state_lst ,self.action_lst , self.reward_lst, self.new_state_lst, self.done_mask = [], [], [], [], []
 
         self.fc1 = nn.Linear(4,128)
         self.fc2 = nn.Linear(128,128)
@@ -39,26 +38,36 @@ class Qnet(nn.Module):
         else:
             return out.argmax().item()
 
-    def put_data(self, action, reward,  done):
-        self.memory.append([action, reward, done])
+    def put_data(self, x):
+        self.memory.append(x)
+
+    def sample(self):
+        s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
+        
+        for transition in self.memory:
+            s, a, r, s_prime, done_mask = transition
+            s_lst.append(s)
+            a_lst.append([a])
+            r_lst.append([r])
+            s_prime_lst.append(s_prime)
+            done_mask_lst.append([done_mask])
+
+        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst),torch.tensor(r_lst), torch.tensor(s_prime_lst, dtype=torch.float), torch.tensor(done_mask_lst)
+
+
 
     def train(self):
-        if len(self.memory) < sample_batch_size:
-           return 
         self.optimizer.zero_grad()
         loss = nn.MSELoss()
-        sample_batch = random.sample(self.memory, sample_batch_size)
-        for action, reward, done in sample_batch:
-            target = reward
-            if not done:
-                target = reward + gamma * np.amax(self.memory[:][1])
-            # print(reward)
-            # print(target)
-            # [(1, 1.0,  False)]
-            # loss = nn.MSELoss(reward, torch.tensor(target))
-            output = torch.tensor((target - reward) ** 2, requires_grad= True)
-            output.backward()
-            self.optimizer.step()
+        state,action,reward,next_state,done_mask = self.sample()
+        out = self.forward(state).gather(1,action)
+        max_q_prime = torch.max(self.forward(next_state))
+        target = reward + gamma * max_q_prime* done_mask
+        output = loss(out, target)
+        output.backward()
+        self.optimizer.step()
+        self.memory = []
+            
 
 
 Qn = Qnet()
@@ -71,23 +80,15 @@ for n_epi in range(10000):
     eps = max(0.01, 0.08-0.01*(n_epi/10000))
     done = False
     while not done:
-        state = torch.tensor(state, dtype = torch.float)
-        if n_epi% 500 == 0 and n_epi :
-            env.render()
-        # if score > 175:
-        #     render_option = True
-
-        # if render_option:
-        #     env.render()
-        action = Qn.sample_action(state, eps)
+        action = Qn.sample_action(torch.tensor(state, dtype = torch.float), eps)
         
-        new_state, reward, done, __ = env.step(action)       
+        new_state, reward, done, __ = env.step(action)   
+        done_mask = 0.0 if done else 1.0    
         if done:
             break
         score += reward
-        Qn.put_data(action, reward, done)
+        Qn.put_data((state, action, reward/100.0, new_state, done_mask))
         state = new_state
-
     Qn.train()
     if n_epi%20 ==0 and n_epi !=0:
         print("# of episode :{}, Avg score : {}".format(n_epi, score/20))

@@ -63,12 +63,10 @@ class Qnet(nn.Module):
 def train(q, q_target, memory, optimizer):
     for i in range(10):
         state,action,reward,next_state,done_mask = memory.sample(batch_size)
-
         q_out = q(state)
         q_a = q_out.gather(1,action)
         max_q_prime = q_target(next_state).max(1)[0].unsqueeze(1)
         target = reward + gamma * max_q_prime * done_mask
-        print(done_mask)
         loss = F.smooth_l1_loss(q_a, target)
         
         optimizer.zero_grad()
