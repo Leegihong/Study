@@ -8,7 +8,7 @@ import numpy as np
 import random
 
 env = gym.make("CartPole-v1")
-learning_rate = 0.05
+learning_rate = 0.0005
 gamma = 0.98
 
 
@@ -64,6 +64,7 @@ class Qnet(nn.Module):
         max_q_prime = torch.max(self.forward(next_state))
         target = reward + gamma * max_q_prime* done_mask
         output = loss(out, target)
+        self.optimizer.zero_grad()
         output.backward()
         self.optimizer.step()
         self.memory = []
@@ -77,22 +78,24 @@ score = 0.0
 
 for n_epi in range(10000):
     state = env.reset()
-    eps = max(0.01, 0.08-0.01*(n_epi/10000))
+    eps = max(0.01, 0.08-0.01*(n_epi/200))
     done = False
     while not done:
-        action = Qn.sample_action(torch.tensor(state, dtype = torch.float), eps)
+        action = Qn.sample_action(torch.from_numpy(state).float(), eps)
         
         new_state, reward, done, __ = env.step(action)   
-        done_mask = 0.0 if done else 1.0    
+        done_mask = 0.0 if done else 1.0 
+        Qn.put_data((state, action, reward/100.0, new_state, done_mask))
+        state = new_state  
+        score += reward 
         if done:
             break
-        score += reward
-        Qn.put_data((state, action, reward/100.0, new_state, done_mask))
-        state = new_state
+        
+        
     Qn.train()
     if n_epi%20 ==0 and n_epi !=0:
-        print("# of episode :{}, Avg score : {}".format(n_epi, score/20))
-        score = 0
+        print("# of episode :{}, Avg score : {:.1f}, eps : {:.1f}".format(n_epi, score/20, eps*100))
+        score = 0.0
     
     
 env.close()
