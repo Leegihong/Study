@@ -13,15 +13,15 @@ gamma         = 0.98
 buffer_limit  = 50000
 batch_size    = 32
 
-class Memory():
+class ReplayBuffer():
     def __init__(self):
-        self.memory = []
+        self.buffer = collections.deque(maxlen=buffer_limit)
     
     def put(self, transition):
-        self.memory.append(transition)
+        self.buffer.append(transition)
     
     def sample(self, n):
-        mini_batch = random.sample(self.memory, n)
+        mini_batch = random.sample(self.buffer, n)
         s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
         
         for transition in mini_batch:
@@ -37,7 +37,7 @@ class Memory():
                torch.tensor(done_mask_lst)
     
     def size(self):
-        return len(self.memory)
+        return len(self.buffer)
 
 class Qnet(nn.Module):
     def __init__(self):
@@ -62,11 +62,12 @@ class Qnet(nn.Module):
             
 def train(q, q_target, memory, optimizer):
     for i in range(10):
-        state,action,reward,next_state,done_mask = memory.sample(batch_size)
-        q_out = q(state)
-        q_a = q_out.gather(1,action)
-        max_q_prime = q_target(next_state).max(1)[0].unsqueeze(1)
-        target = reward + gamma * max_q_prime * done_mask
+        s,a,r,s_prime,done_mask = memory.sample(batch_size)
+
+        q_out = q(s)
+        q_a = q_out.gather(1,a)
+        max_q_prime = q_target(s_prime).max(1)[0].unsqueeze(1)
+        target = r + gamma * max_q_prime * done_mask
         loss = F.smooth_l1_loss(q_a, target)
         
         optimizer.zero_grad()
@@ -78,41 +79,36 @@ def main():
     q = Qnet()
     q_target = Qnet()
     q_target.load_state_dict(q.state_dict())
-    memory = Memory()
+    memory = ReplayBuffer()
 
     print_interval = 20
     score = 0.0  
     optimizer = optim.Adam(q.parameters(), lr=learning_rate)
 
-    for n_epi in range(200):
+    for n_epi in range(10000):
         epsilon = max(0.01, 0.08 - 0.01*(n_epi/200)) #Linear annealing from 8% to 1%
-        state = env.reset()
+        s = env.reset()
         done = False
 
         while not done:
-            
-            action = q.sample_action(torch.from_numpy(state).float(), epsilon)
-                
-            next_state, reward, done, info = env.step(action)
+            a = q.sample_action(torch.from_numpy(s).float(), epsilon)      
+            s_prime, r, done, info = env.step(a)
             done_mask = 0.0 if done else 1.0
-            memory.put((state,action,reward/100.0,next_state, done_mask))
-            state = next_state
+            memory.put((s,a,r/100.0,s_prime, done_mask))
+            s = s_prime
 
-            score += reward
+            score += r
             if done:
                 break
             
-        if memory.size()>500:
+        if memory.size()>2000:
             train(q, q_target, memory, optimizer)
 
         if n_epi%print_interval==0 and n_epi!=0:
             q_target.load_state_dict(q.state_dict())
             print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
                                                             n_epi, score/print_interval, memory.size(), epsilon*100))
-            
             score = 0.0
-            
-    env.render()   
     env.close()
 
 if __name__ == '__main__':

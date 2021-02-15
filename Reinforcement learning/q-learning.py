@@ -8,8 +8,8 @@ import numpy as np
 import random
 
 env = gym.make("CartPole-v1")
-learning_rate = 0.0005
-gamma = 0.98
+learning_rate = 0.0001
+gamma = 0.9
 
 
 
@@ -17,11 +17,10 @@ class Qnet(nn.Module):
     def __init__(self):
         super(Qnet,self).__init__()
         self.memory = []
-        # self.state_lst ,self.action_lst , self.reward_lst, self.new_state_lst, self.done_mask = [], [], [], [], []
 
-        self.fc1 = nn.Linear(4,128)
-        self.fc2 = nn.Linear(128,128)
-        self.fc3 = nn.Linear(128,2)
+        self.fc1 = nn.Linear(4,32)
+        self.fc2 = nn.Linear(32,32)
+        self.fc3 = nn.Linear(32,2)
         self.optimizer = optim.Adam(self.parameters(), lr = learning_rate)
 
     def forward(self, x):
@@ -57,13 +56,14 @@ class Qnet(nn.Module):
 
 
     def train(self):
-        self.optimizer.zero_grad()
         loss = nn.MSELoss()
         state,action,reward,next_state,done_mask = self.sample()
-        out = self.forward(state).gather(1,action)
+        out = self.forward(state)
+        q_out = out.gather(1,action)
         max_q_prime = torch.max(self.forward(next_state))
         target = reward + gamma * max_q_prime* done_mask
-        output = loss(out, target)
+        target.detach()
+        output = loss(q_out, target)
         self.optimizer.zero_grad()
         output.backward()
         self.optimizer.step()
@@ -74,15 +74,13 @@ class Qnet(nn.Module):
 Qn = Qnet()
 score = 0.0
 
-
-
 for n_epi in range(10000):
-    state = env.reset()
     eps = max(0.01, 0.08-0.01*(n_epi/200))
+    state = env.reset()
     done = False
+
     while not done:
         action = Qn.sample_action(torch.from_numpy(state).float(), eps)
-        
         new_state, reward, done, __ = env.step(action)   
         done_mask = 0.0 if done else 1.0 
         Qn.put_data((state, action, reward/100.0, new_state, done_mask))
@@ -99,3 +97,4 @@ for n_epi in range(10000):
     
     
 env.close()
+#30에서 40정도 사이로 수렴
