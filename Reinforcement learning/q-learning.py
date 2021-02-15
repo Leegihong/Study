@@ -7,9 +7,13 @@ from torch.distributions import Categorical
 import numpy as np
 import random
 
+
+
 env = gym.make("CartPole-v1")
 learning_rate = 0.0001
-gamma = 0.9
+gamma = 0.99
+loss = nn.MSELoss()
+
 
 
 
@@ -56,45 +60,46 @@ class Qnet(nn.Module):
 
 
     def train(self):
-        loss = nn.MSELoss()
         state,action,reward,next_state,done_mask = self.sample()
         out = self.forward(state)
         q_out = out.gather(1,action)
-        max_q_prime = torch.max(self.forward(next_state))
+        max_q_prime = self.forward(next_state).max(1)[0].unsqueeze(1)
         target = reward + gamma * max_q_prime* done_mask
         target.detach()
         output = loss(q_out, target)
         self.optimizer.zero_grad()
         output.backward()
         self.optimizer.step()
-        self.memory = []
+        self.memory.clear()
             
 
 
 Qn = Qnet()
 score = 0.0
 
-for n_epi in range(10000):
-    eps = max(0.01, 0.08-0.01*(n_epi/200))
+for n_epi in range(5000):
+    eps = max(0.05, 0.5-0.01*(n_epi/100))
     state = env.reset()
     done = False
 
     while not done:
+        if n_epi == 5000:
+            env.render()
         action = Qn.sample_action(torch.from_numpy(state).float(), eps)
         new_state, reward, done, __ = env.step(action)   
         done_mask = 0.0 if done else 1.0 
         Qn.put_data((state, action, reward/100.0, new_state, done_mask))
         state = new_state  
         score += reward 
+        Qn.train()
         if done:
             break
         
-        
-    Qn.train()
     if n_epi%20 ==0 and n_epi !=0:
-        print("# of episode :{}, Avg score : {:.1f}, eps : {:.1f}".format(n_epi, score/20, eps*100))
+        print("# of episode :{}, Avg score : {:.1f}, eps : {:.3f}".format(n_epi, score/20, eps))
+        
         score = 0.0
-    
-    
+
 env.close()
-#30에서 40정도 사이로 수렴
+
+
